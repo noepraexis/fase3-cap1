@@ -38,7 +38,7 @@ SemaphoreHandle_t g_wifiConnectedSemaphore = nullptr;
  * Handler de eventos WiFi para sinalização de conexão.
  *
  * Esta versão melhorada evita conflitos com outros handlers
- * e implementa um mecanismo mais robusto de sinalização.
+ * e implementa um mecanismo mais rigoroso de sinalização.
  */
 void wifiEventHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
     static bool semaphoreDone = false;

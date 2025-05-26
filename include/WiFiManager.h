@@ -1,6 +1,6 @@
 /**
  * @file WiFiManager.h
- * @brief Gerencia a conexão WiFi robustamente.
+ * @brief Gerencia a conexão WiFi consistentemente.
  */
 
 #ifndef WIFI_MANAGER_H
@@ -12,7 +12,7 @@
 #include "Hardware.h"
 
 /**
- * Classe para gerenciar a conexão WiFi robustamente.
+ * Classe para gerenciar a conexão WiFi consistentemente.
  *
  * Implementa estratégias de reconexão automática e monitoramento
  * de qualidade de sinal.

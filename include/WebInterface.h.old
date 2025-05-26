@@ -1,0 +1,54 @@
+/**
+ * @file WebInterface.h
+ * @brief Gerencia a interface web do sistema.
+ */
+
+#ifndef WEB_INTERFACE_H
+#define WEB_INTERFACE_H
+
+#include <WebServer.h>
+#include "SensorManager.h"
+
+class WebInterface {
+private:
+    WebServer m_server;
+    SensorManager& m_sensorManager;
+
+    /**
+     * Handler para a rota principal (/).
+     */
+    void handleRoot();
+
+    /**
+     * Handler para a rota de dados (/dados).
+     */
+    void handleData();
+
+    /**
+     * Retorna o HTML da página principal.
+     *
+     * @return String com o HTML.
+     */
+    String getPaginaHtml() const;
+
+public:
+    /**
+     * Constrói a interface web.
+     *
+     * @param port Porta para o servidor web.
+     * @param sensorManager Referência para o gerenciador de sensores.
+     */
+    WebInterface(int port, SensorManager& sensorManager);
+
+    /**
+     * Inicializa o servidor web.
+     */
+    void begin();
+
+    /**
+     * Processa as requisições pendentes.
+     */
+    void handleClient();
+};
+
+#endif // WEB_INTERFACE_H

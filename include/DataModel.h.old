@@ -1,0 +1,48 @@
+/**
+ * @file DataModel.h
+ * @brief Define a estrutura de dados do sistema.
+ */
+
+#ifndef DATA_MODEL_H
+#define DATA_MODEL_H
+
+#include <Arduino.h>
+
+/**
+ * Representa o estado dos sensores e seus valores.
+ */
+class SoilData {
+private:
+    bool m_fosforoPresente = false;
+    bool m_potassioPresente = false;
+    int m_valorPHRaw = 0;
+    int m_valorUmidadeRaw = 0;
+
+public:
+    SoilData() = default;
+
+    // Getters
+    bool fosforoPresente() const { return m_fosforoPresente; }
+    bool potassioPresente() const { return m_potassioPresente; }
+    int valorPHRaw() const { return m_valorPHRaw; }
+    int valorUmidadeRaw() const { return m_valorUmidadeRaw; }
+
+    // Setters
+    void setFosforo(bool presente) { m_fosforoPresente = presente; }
+    void setPotassio(bool presente) { m_potassioPresente = presente; }
+    void setValorPH(int valor) { m_valorPHRaw = valor; }
+    void setValorUmidade(int valor) { m_valorUmidadeRaw = valor; }
+
+    // Métodos calculados
+    float phEscala() const;
+    float umidadePorcentagem() const;
+
+    /**
+     * Converte os dados para formato JSON.
+     *
+     * @return String com o JSON dos dados.
+     */
+    String toJson() const;
+};
+
+#endif // DATA_MODEL_H

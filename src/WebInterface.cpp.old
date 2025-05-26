@@ -1,0 +1,148 @@
+/**
+ * @file WebInterface.cpp
+ * @brief Implementa a interface web.
+ */
+
+#include "WebInterface.h"
+
+WebInterface::WebInterface(int port, SensorManager& sensorManager)
+    : m_server(port), m_sensorManager(sensorManager) {
+}
+
+void WebInterface::begin() {
+    // Configura as rotas do servidor
+    m_server.on("/", HTTP_GET, [this]() { handleRoot(); });
+    m_server.on("/dados", HTTP_GET, [this]() { handleData(); });
+
+    // Inicia o servidor
+    m_server.begin();
+    Serial.println("Servidor HTTP iniciado");
+}
+
+void WebInterface::handleClient() {
+    m_server.handleClient();
+}
+
+void WebInterface::handleRoot() {
+    m_server.send(200, "text/html; charset=utf-8", getPaginaHtml());
+}
+
+void WebInterface::handleData() {
+    const SoilData& dados = m_sensorManager.atualizarLeituras();
+    m_server.send(200, "application/json", dados.toJson());
+}
+
+String WebInterface::getPaginaHtml() const {
+    return R"(
+<!DOCTYPE html><html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Monitoramento do Solo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    html { font-family: sans-serif; text-align: center; }
+    body { display: inline-flex; flex-direction: column; max-width: 800px;
+            margin: 0 auto; padding: 20px; }
+    h1 { margin-bottom: 1.2em; color: #3a7d44; }
+    .sensor-grid { display: grid; grid-template-columns: 1fr 1fr;
+                    grid-gap: 1.5em; margin-bottom: 2em; }
+    .sensor-box { border: 1px solid #ddd; border-radius: 10px;
+                    padding: 1em; background-color: #f9f9f9; }
+    .sensor-value { font-size: 2em; font-weight: bold; margin: 0.5em 0; }
+    .status { padding: 0.5em; border-radius: 5px; font-weight: bold; }
+    .presente { background-color: #a8e6a0; color: #2c5e2e; }
+    .ausente { background-color: #ffb3b3; color: #a02c2c; }
+    .ph-scale { width: 100%; height: 30px;
+                background: linear-gradient(to right, #ff0000, #ffff00,
+                #00ff00, #00ffff, #0000ff);
+                border-radius: 5px; position: relative; margin-top: 10px; }
+    .ph-marker { position: absolute; width: 10px; height: 40px;
+                background-color: #000; transform: translateX(-50%);
+                top: -5px; }
+    .umidade-bar { width: 100%; height: 30px;
+                    background: linear-gradient(to right, #8B4513, #a8e6a0);
+                    border-radius: 5px; position: relative; margin-top: 10px; }
+    .umidade-marker { position: absolute; width: 10px; height: 40px;
+                        background-color: #000; transform: translateX(-50%);
+                        top: -5px; }
+    </style>
+    <script>
+    // Atualiza os dados a cada 1 segundo
+    setInterval(function() {
+        fetch('/dados')
+        .then(response => response.json())
+        .then(data => {
+            // Atualiza Fósforo
+            document.getElementById('fosforo-status').textContent =
+            data.fosforo ? 'PRESENTE' : 'AUSENTE';
+            document.getElementById('fosforo-status').className =
+            'status ' + (data.fosforo ? 'presente' : 'ausente');
+
+            // Atualiza Potássio
+            document.getElementById('potassio-status').textContent =
+            data.potassio ? 'PRESENTE' : 'AUSENTE';
+            document.getElementById('potassio-status').className =
+            'status ' + (data.potassio ? 'presente' : 'ausente');
+
+            // Atualiza pH
+            document.getElementById('ph-value').textContent =
+            data.ph.toFixed(1);
+            document.getElementById('ph-marker').style.left =
+            (data.ph / 14.0 * 100.0) + '%';
+
+            // Atualiza Umidade
+            document.getElementById('umidade-value').textContent =
+            data.umidade.toFixed(1) + '%';
+            document.getElementById('umidade-marker').style.left =
+            data.umidade + '%';
+        });
+    }, 1000);
+    </script>
+</head>
+
+<body>
+    <h1>Sistema de Monitoramento do Solo</h1>
+
+    <div class="sensor-grid">
+    <div class="sensor-box">
+        <h2>Fósforo (P)</h2>
+        <div class="sensor-value">
+        <span id="fosforo-status" class="status ausente">AUSENTE</span>
+        </div>
+    </div>
+    <div class="sensor-box">
+        <h2>Potássio (K)</h2>
+        <div class="sensor-value">
+        <span id="potassio-status" class="status ausente">AUSENTE</span>
+        </div>
+    </div>
+    <div class="sensor-box">
+        <h2>pH do Solo</h2>
+        <div class="sensor-value" id="ph-value">0.0</div>
+        <div class="ph-scale">
+        <div id="ph-marker" class="ph-marker" style="left: 0%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between;
+                    margin-top: 5px;">
+        <span>0</span>
+        <span>7</span>
+        <span>14</span>
+        </div>
+    </div>
+    <div class="sensor-box">
+        <h2>Umidade do Solo</h2>
+        <div class="sensor-value" id="umidade-value">0.0%</div>
+        <div class="umidade-bar">
+        <div id="umidade-marker" class="umidade-marker" style="left: 0%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between;
+                    margin-top: 5px;">
+        <span>Seco</span>
+        <span>Úmido</span>
+        </div>
+    </div>
+    </div>
+</body>
+</html>
+    )";
+}

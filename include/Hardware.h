@@ -18,6 +18,7 @@ namespace Hardware {
     constexpr uint8_t PIN_PH_SENSOR = 34;       // Sensor analógico para pH
     constexpr uint8_t PIN_DHT22_SENSOR = 23;    // Sensor digital DHT22 para temperatura e umidade (pino 23 é bidirecional)
     constexpr uint8_t PIN_LED_INDICATOR = 26;   // LED indicador
+    constexpr uint8_t PIN_IRRIGATION_RELAY = 27; // Relé para controle da bomba de irrigação
 
     // Tipo do sensor DHT
     constexpr uint8_t DHT_TYPE = DHT22;         // Usar DHT22 em vez de DHT11
@@ -26,6 +27,12 @@ namespace Hardware {
     enum LedState {
         LED_OFF = LOW,
         LED_ON  = HIGH
+    };
+
+    // Estados do relé de irrigação
+    enum RelayState {
+        RELAY_OFF = LOW,   // Estado seguro (fail-safe)
+        RELAY_ON  = HIGH   // Relé ativado
     };
 
     /**
@@ -93,6 +100,34 @@ namespace Hardware {
      * @return Temperatura calibrada para exibição
      */
     float getCalibrationTemperature(float rawTemp);
+
+    /**
+     * Define o estado do relé de irrigação.
+     *
+     * @param state Estado desejado para o relé (LOW ou HIGH).
+     */
+    void IRAM_ATTR setRelayState(RelayState state);
+
+    /**
+     * Alterna o estado do relé de irrigação.
+     *
+     * Função otimizada para execução rápida.
+     */
+    void IRAM_ATTR toggleRelay();
+
+    /**
+     * Obtém o estado atual do relé de irrigação.
+     *
+     * @return true se o relé está ativado, false caso contrário.
+     */
+    bool getRelayState();
+
+    /**
+     * Verifica se é seguro ativar a irrigação.
+     *
+     * @return true se todas as condições de segurança são atendidas.
+     */
+    bool isIrrigationSafe();
 
 } // namespace Hardware
 

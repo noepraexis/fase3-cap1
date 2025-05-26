@@ -27,6 +27,13 @@
 #define PH_SCALE_MIN              0      // Valor mínimo de pH na escala
 #define PH_SCALE_MAX              14     // Valor máximo de pH na escala
 
+// Configurações de irrigação
+#define IRRIGATION_MAX_RUNTIME    300000  // Tempo máximo contínuo de irrigação (ms) - 5 minutos
+#define IRRIGATION_MIN_INTERVAL   60000   // Intervalo mínimo entre ativações (ms) - 1 minuto
+#define IRRIGATION_ACTIVATION_DELAY 500   // Delay antes de ativar relé (ms)
+#define MOISTURE_THRESHOLD_LOW    30.0f   // Limiar inferior para ativação da irrigação (%)
+#define MOISTURE_THRESHOLD_HIGH   70.0f   // Limiar superior para desativação da irrigação (%)
+
 // Configurações de memória
 #define USE_STATIC_MEMORY         true   // Usar alocação estática onde possível
 #define JSON_BUFFER_SIZE          128    // Tamanho do buffer para JSON (bytes)

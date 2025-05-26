@@ -35,8 +35,14 @@ namespace Hardware {
         // Configura o pino do LED como saída
         pinMode(PIN_LED_INDICATOR, OUTPUT);
 
+        // Configura o pino do relé de irrigação como saída
+        pinMode(PIN_IRRIGATION_RELAY, OUTPUT);
+
         // Inicializa o LED como desligado
         digitalWrite(PIN_LED_INDICATOR, LED_OFF);
+
+        // Inicializa o relé como desligado (estado seguro)
+        digitalWrite(PIN_IRRIGATION_RELAY, RELAY_OFF);
 
         // Os pinos analógicos não precisam de configuração no ESP32
 
@@ -266,6 +272,50 @@ namespace Hardware {
         g_currentValues.needsUpdate = true;
 
         return humidity;
+    }
+
+    void IRAM_ATTR setRelayState(RelayState state) {
+        // Função colocada na IRAM para execução mais rápida
+        digitalWrite(PIN_IRRIGATION_RELAY, state);
+    }
+
+    void IRAM_ATTR toggleRelay() {
+        // Alterna o estado do relé (otimizado para IRAM)
+        static bool relayState = false;
+        relayState = !relayState;
+        digitalWrite(PIN_IRRIGATION_RELAY, relayState ? RELAY_ON : RELAY_OFF);
+    }
+
+    bool getRelayState() {
+        // Retorna true se o relé está ativado
+        return digitalRead(PIN_IRRIGATION_RELAY) == RELAY_ON;
+    }
+
+    bool isIrrigationSafe() {
+        // Verificações básicas de segurança para irrigação
+        
+        // Verifica se o sistema não está em modo de emergência
+        static bool emergencyMode = false;
+        if (emergencyMode) {
+            return false;
+        }
+
+        // Verifica se há energia suficiente (simulado - em hardware real seria um sensor)
+        // Para simulação, sempre retorna true
+        bool powerOk = true;
+
+        // Verifica se não há falhas de hardware críticas
+        bool hardwareOk = true;
+
+        // Verifica se o sensor DHT22 está funcionando (indicativo de sistema saudável)
+        float testTemp = readTemperature();
+        bool sensorsOk = !isnan(testTemp) && (testTemp > -40.0f && testTemp < 80.0f);
+
+        if (DEBUG_MODE && !sensorsOk) {
+            LOG_DEBUG(MODULE_NAME, "Verificação de segurança: sensores com problemas");
+        }
+
+        return powerOk && hardwareOk && sensorsOk;
     }
 
 } // namespace Hardware

@@ -93,9 +93,9 @@ bool TelemetryEventManager::removeListener(TelemetryEventListener listener) {
 
 void TelemetryEventManager::distribute(const char* source, const TelemetryBuffer& data) {
     // Log para debug de distrição de telemetria
-    LOG_DEBUG(MODULE_NAME, "Distribuindo telemetria de [%s]: %.1f°C, %.1f%%, pH:%.1f", 
+    LOG_DEBUG(MODULE_NAME, "Distribuindo telemetria de [%s]: %.1f°C, %.1f%%, pH:%.1f",
               source, data.temperature, data.humidity, data.ph);
-              
+
     // Verificação rápida para otimização - se não há ouvintes, retorna imediatamente
     if (s_listenerCount == 0) {
         LOG_DEBUG(MODULE_NAME, "Sem listeners registrados para telemetria");

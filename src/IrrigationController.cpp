@@ -59,7 +59,7 @@ bool IrrigationController::init() {
     m_initialized = true;
 
     LOG_INFO(MODULE_NAME, "Controlador inicializado com sucesso");
-    LOG_INFO(MODULE_NAME, "Limiar de umidade: %.1f%% - %.1f%%", 
+    LOG_INFO(MODULE_NAME, "Limiar de umidade: %.1f%% - %.1f%%",
              MOISTURE_THRESHOLD_LOW, MOISTURE_THRESHOLD_HIGH);
 
     return true;
@@ -104,7 +104,7 @@ bool IrrigationController::updateDecision(const SensorData& sensorData) {
     }
 
     uint32_t currentTime = millis();
-    
+
     // Limite de frequência de decisões (não mais que a cada 5 segundos)
     if (currentTime - m_data.lastDecisionTime < 5000) {
         return false;

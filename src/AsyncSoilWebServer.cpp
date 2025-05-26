@@ -139,6 +139,18 @@ const char AsyncSoilWebServer::INDEX_HTML[] PROGMEM = R"rawliteral(
             <h2>Umidade do Ar</h2>
             <div class="value" id="humidity-value">0.0%</div>
         </div>
+        <div class="box">
+            <h2>Sistema de Irrigação</h2>
+            <div class="value">
+                <span id="pump-status" class="status off">DESLIGADA</span>
+            </div>
+            <button id="pump-toggle" onclick="togglePump()" style="margin: 10px 0; padding: 10px 20px; border: none; border-radius: 5px; background-color: #3498db; color: white; cursor: pointer;">Alternar Bomba</button>
+            <div class="stats">
+                <div>Tempo funcionamento: <span id="pump-runtime">0</span>s</div>
+                <div>Ativações hoje: <span id="pump-activations">0</span></div>
+                <div>Limiar umidade: <span id="moisture-threshold">30.0</span>%</div>
+            </div>
+        </div>
     </div>
 
     <div class="container" style="margin-top: 20px;">
@@ -166,7 +178,10 @@ const char AsyncSoilWebServer::INDEX_HTML[] PROGMEM = R"rawliteral(
         'clients': '0',
         'wifi-status': 'Desconectado',
         'phosphorus-status': { text: 'AUSENTE', className: 'status off' },
-        'potassium-status': { text: 'AUSENTE', className: 'status off' }
+        'potassium-status': { text: 'AUSENTE', className: 'status off' },
+        'pump-status': { text: 'DESLIGADA', className: 'status off' },
+        'pump-runtime': '0',
+        'pump-activations': '0'
     };
 
     // Função para atualizar elemento apenas se o valor for diferente
@@ -281,6 +296,34 @@ const char AsyncSoilWebServer::INDEX_HTML[] PROGMEM = R"rawliteral(
             }
         }
 
+        // Atualiza irrigação
+        if (data.irrigation) {
+            const pumpStatus = document.getElementById('pump-status');
+            const pumpToggle = document.getElementById('pump-toggle');
+
+            if (data.irrigation.active) {
+                updateElementIfChanged('pump-status', {
+                    text: 'LIGADA',
+                    className: 'status on'
+                }, true);
+                if (pumpToggle) pumpToggle.textContent = 'Desligar Bomba';
+            } else {
+                updateElementIfChanged('pump-status', {
+                    text: 'DESLIGADA',
+                    className: 'status off'
+                }, true);
+                if (pumpToggle) pumpToggle.textContent = 'Ligar Bomba';
+            }
+
+            if (data.irrigation.uptime !== undefined) {
+                updateElementIfChanged('pump-runtime', data.irrigation.uptime.toString());
+            }
+
+            if (data.irrigation.dailyActivations !== undefined) {
+                updateElementIfChanged('pump-activations', data.irrigation.dailyActivations.toString());
+            }
+        }
+
         // Atualiza estatísticas
         if (data.stats) {
             // Memória livre
@@ -318,6 +361,24 @@ const char AsyncSoilWebServer::INDEX_HTML[] PROGMEM = R"rawliteral(
             if (data.stats.wifi !== undefined) {
                 updateElementIfChanged('wifi-status', data.stats.wifi);
             }
+        }
+    }
+
+    function togglePump() {
+        try {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const command = {
+                    action: 'irrigation_toggle'
+                };
+                ws.send(JSON.stringify(command));
+                console.log('Comando de irrigação enviado');
+            } else {
+                console.error('WebSocket não conectado');
+                alert('Conexão perdida. Recarregue a página.');
+            }
+        } catch (error) {
+            console.error('Erro ao alternar bomba:', error);
+            alert('Erro ao enviar comando. Tente novamente.');
         }
     }
 
@@ -680,7 +741,8 @@ void AsyncSoilWebServer::handleWebSocketEvent(AsyncWebSocket *server,
                                 len, client->id());
                     }
 
-                    // Poderíamos processar comandos do cliente aqui se necessário
+                    // Processa comandos JSON do cliente
+                    processWebSocketCommand(client, data, len);
                 }
             }
             break;
@@ -691,6 +753,69 @@ void AsyncSoilWebServer::handleWebSocketEvent(AsyncWebSocket *server,
             // Sem processamento especial para PONG, PING ou ERROR
             break;
     }
+}
+
+void AsyncSoilWebServer::processWebSocketCommand(AsyncWebSocketClient *client,
+                                               uint8_t *data, size_t len) {
+    // Converte os dados recebidos em string
+    char* commandStr = new char[len + 1];
+    if (!commandStr) {
+        LOG_ERROR(MODULE_NAME, "Falha ao alocar memória para comando WebSocket");
+        return;
+    }
+
+    memcpy(commandStr, data, len);
+    commandStr[len] = '\0';
+
+    // Analisa o comando JSON
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, commandStr);
+
+    if (error) {
+        LOG_WARN(MODULE_NAME, "Comando JSON inválido recebido: %s", error.c_str());
+        delete[] commandStr;
+        return;
+    }
+
+    // Processa o comando baseado na ação
+    const char* action = doc["action"];
+    if (action) {
+        if (strcmp(action, "irrigation_toggle") == 0) {
+            // Comando para alternar irrigação
+            // Código correto (TOGGLE):
+            bool isActive = m_sensorManager.isIrrigationActive();
+            bool success = isActive ?
+                m_sensorManager.deactivateIrrigation(true) :  // Se ativa, desativa manual
+                m_sensorManager.activateIrrigation();          // Se inativa, ativa
+
+            if (DEBUG_MODE) {
+                DBG_DEBUG(MODULE_NAME, "Comando irrigação do cliente #%u: %s",
+                        client->id(), success ? "sucesso" : "falhou");
+            }
+
+            // Envia confirmação de volta ao cliente
+            StaticJsonDocument<128> response;
+            response["type"] = "irrigation_response";
+            response["success"] = success;
+            response["action"] = "toggle";
+
+            String responseStr;
+            serializeJson(response, responseStr);
+            client->text(responseStr);
+
+            // Força atualização imediata dos dados para todos os clientes
+            if (success) {
+                m_sensorManager.update(true);
+                TelemetryBuffer telemetry = m_sensorManager.prepareTelemetry();
+                TELEMETRY(MODULE_NAME, telemetry);
+            }
+        }
+        else {
+            LOG_WARN(MODULE_NAME, "Ação desconhecida recebida: %s", action);
+        }
+    }
+
+    delete[] commandStr;
 }
 
 void AsyncSoilWebServer::onWebSocketEvent(AsyncWebSocket *server,

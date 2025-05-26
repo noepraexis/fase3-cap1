@@ -44,6 +44,12 @@ SensorManager::SensorManager()
 bool SensorManager::init() {
     LOG_INFO(MODULE_NAME, "Inicializando Gerenciador de Sensores");
 
+    // Inicializa o controlador de irrigação
+    if (!IrrigationController::getInstance().init()) {
+        LOG_ERROR(MODULE_NAME, "Falha ao inicializar controlador de irrigação");
+        return false;
+    }
+
     // Não há inicialização específica necessária para sensores neste sistema
     // Mas realizamos uma leitura inicial para popular os buffers
     readSensors();
@@ -181,6 +187,23 @@ TelemetryBuffer SensorManager::prepareTelemetry() {
     telemetry.phosphorusPresent = m_processedData.phosphorusPresent;
     telemetry.potassiumPresent = m_processedData.potassiumPresent;
 
+    // Preenche dados do sistema de irrigação
+    if (IrrigationController::getInstance().isInitialized()) {
+        const IrrigationData& irrigData = IrrigationController::getInstance().getData();
+        telemetry.irrigationActive = irrigData.pumpActive;
+        telemetry.irrigationUptime = irrigData.totalRuntime;
+        telemetry.lastIrrigationTime = irrigData.activationTime;
+        telemetry.dailyActivations = irrigData.dailyActivations;
+        telemetry.moistureThreshold = irrigData.currentThreshold;
+    } else {
+        // Valores padrão se o controlador não estiver inicializado
+        telemetry.irrigationActive = false;
+        telemetry.irrigationUptime = 0;
+        telemetry.lastIrrigationTime = 0;
+        telemetry.dailyActivations = 0;
+        telemetry.moistureThreshold = MOISTURE_THRESHOLD_LOW;
+    }
+
     // Preenche estatísticas do sistema
     SystemStats stats = SystemMonitor::getInstance().getStats();
     telemetry.freeHeap = stats.freeHeap;
@@ -223,6 +246,13 @@ bool SensorManager::update(bool forceUpdate) {
         // Processa os dados
         processSensorData();
 
+        // Atualiza o sistema de irrigação com base nos dados dos sensores
+        if (IrrigationController::getInstance().isInitialized()) {
+            if (IrrigationController::getInstance().updateDecision(m_processedData)) {
+                LOG_DEBUG(MODULE_NAME, "Sistema de irrigação atualizou baseado nos sensores");
+            }
+        }
+
         // Não fazemos mais preparação de telemetria aqui
         // A telemetria será solicitada pelo AsyncSoilWebServer quando necessário
         if (currentTime - lastDisplayUpdate >= 500) { // 2Hz é suficiente para visualização
@@ -233,6 +263,13 @@ bool SensorManager::update(bool forceUpdate) {
         checkStateChanges();
 
         dataChanged = true;
+    }
+
+    // Atualiza o controlador de irrigação independentemente (verificações de timeout, etc.)
+    if (IrrigationController::getInstance().isInitialized()) {
+        if (IrrigationController::getInstance().update()) {
+            dataChanged = true;
+        }
     }
 
     // Se não é hora de atualizar, apenas verifica mudanças nos sensores digitais
@@ -313,4 +350,46 @@ bool SensorManager::sensorChanged(uint8_t sensorType, float threshold) const {
         default:
             return false;
     }
+}
+
+bool SensorManager::activateIrrigation(uint32_t duration) {
+    if (!IrrigationController::getInstance().isInitialized()) {
+        LOG_ERROR(MODULE_NAME, "Controlador de irrigação não inicializado");
+        return false;
+    }
+
+    return IrrigationController::getInstance().activateManual(duration);
+}
+
+bool SensorManager::deactivateIrrigation(bool manual) {
+    if (!IrrigationController::getInstance().isInitialized()) {
+        LOG_ERROR(MODULE_NAME, "Controlador de irrigação não inicializado");
+        return false;
+    }
+
+    return IrrigationController::getInstance().deactivate(manual);
+}
+
+bool SensorManager::isIrrigationActive() const {
+    if (!IrrigationController::getInstance().isInitialized()) {
+        return false;
+    }
+
+    return IrrigationController::getInstance().isActive();
+}
+
+const IrrigationData& SensorManager::getIrrigationData() const {
+    return IrrigationController::getInstance().getData();
+}
+
+bool SensorManager::processIrrigationCommand(bool activate, uint32_t duration) {
+    if (!IrrigationController::getInstance().isInitialized()) {
+        LOG_ERROR(MODULE_NAME, "Controlador de irrigação não inicializado para comando WebSocket");
+        return false;
+    }
+
+    LOG_INFO(MODULE_NAME, "Processando comando de irrigação via SensorManager: %s",
+             activate ? "ATIVAR" : "DESATIVAR");
+
+    return IrrigationController::getInstance().processCommand(activate, duration);
 }

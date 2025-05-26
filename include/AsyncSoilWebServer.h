@@ -49,6 +49,15 @@ private:
                             AwsEventType type, void *arg, uint8_t *data, size_t len);
 
     /**
+     * Processa comandos recebidos via WebSocket.
+     *
+     * @param client Ponteiro para o cliente WebSocket.
+     * @param data Dados do comando.
+     * @param len Comprimento dos dados.
+     */
+    void processWebSocketCommand(AsyncWebSocketClient *client, uint8_t *data, size_t len);
+
+    /**
      * Callback para eventos WebSocket.
      *
      * @param server Ponteiro para o servidor WebSocket.

@@ -14,7 +14,7 @@
 /**
  * @struct TelemetryBuffer
  * @brief Estrutura unificada para armazenamento e transmissão de dados de telemetria.
- * 
+ *
  * Armazena dados de sensores e do sistema em formato estruturado
  * para facilitar a serialização tanto para o console quanto para
  * comunicação WebSocket, eliminando duplicações.
@@ -63,14 +63,14 @@ struct TelemetryBuffer {
 
     /**
      * @brief Serializa o buffer para formato JSON.
-     * 
+     *
      * @param json Objeto JSON para serialização
      */
     void toJson(JsonObject& json) const;
 
     /**
      * @brief Converte o buffer para string formatada para console.
-     * 
+     *
      * @param buffer Buffer para armazenar a string formatada
      * @param bufferSize Tamanho do buffer
      * @param type Tipo de telemetria a ser formatada

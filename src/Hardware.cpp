@@ -293,7 +293,7 @@ namespace Hardware {
 
     bool isIrrigationSafe() {
         // Verificações básicas de segurança para irrigação
-        
+
         // Verifica se o sistema não está em modo de emergência
         static bool emergencyMode = false;
         if (emergencyMode) {

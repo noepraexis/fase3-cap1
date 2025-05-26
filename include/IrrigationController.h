@@ -41,7 +41,7 @@ struct IrrigationData {
 /**
  * @class IrrigationController
  * @brief Controlador principal do sistema de irrigação com lógica inteligente.
- * 
+ *
  * Implementa controle automático baseado em dados de sensores, com proteções
  * de segurança, modo manual e sistema de fail-safe robusto seguindo os padrões
  * arquiteturais do projeto.
@@ -62,17 +62,17 @@ public:
 
     /**
      * @brief Atualiza o sistema de irrigação.
-     * 
+     *
      * Deve ser chamado periodicamente para verificar condições
      * e aplicar lógica de controle.
-     * 
+     *
      * @return true se houve mudança de estado.
      */
     bool update();
 
     /**
      * @brief Atualiza a decisão de irrigação baseada nos dados dos sensores.
-     * 
+     *
      * @param sensorData Dados atuais dos sensores.
      * @return true se houve mudança na decisão.
      */
@@ -80,7 +80,7 @@ public:
 
     /**
      * @brief Ativa a irrigação manualmente.
-     * 
+     *
      * @param duration Duração em milissegundos (0 = até desligar manualmente).
      * @return true se a ativação foi bem-sucedida.
      */
@@ -88,7 +88,7 @@ public:
 
     /**
      * @brief Desativa a irrigação.
-     * 
+     *
      * @param manual true se foi desativação manual.
      * @return true se a desativação foi bem-sucedida.
      */
@@ -96,35 +96,35 @@ public:
 
     /**
      * @brief Verifica se a irrigação está ativa.
-     * 
+     *
      * @return true se a bomba está ligada.
      */
     bool isActive() const;
 
     /**
      * @brief Obtém os dados atuais do sistema de irrigação.
-     * 
+     *
      * @return Referência constante aos dados de irrigação.
      */
     const IrrigationData& getData() const;
 
     /**
      * @brief Obtém o tempo total de funcionamento em segundos.
-     * 
+     *
      * @return Tempo total de funcionamento.
      */
     uint32_t getTotalRuntime() const;
 
     /**
      * @brief Obtém o timestamp da última ativação.
-     * 
+     *
      * @return Timestamp da última ativação.
      */
     uint32_t getLastActivation() const;
 
     /**
      * @brief Processa comando recebido via WebSocket.
-     * 
+     *
      * @param activate true para ativar, false para desativar.
      * @param duration Duração em milissegundos (apenas para ativação).
      * @return true se o comando foi processado com sucesso.
@@ -133,21 +133,21 @@ public:
 
     /**
      * @brief Ativa o shutdown de emergência.
-     * 
+     *
      * Para a irrigação imediatamente e bloqueia futuras ativações.
      */
     void emergencyShutdown();
 
     /**
      * @brief Reseta o shutdown de emergência.
-     * 
+     *
      * @return true se o reset foi bem-sucedido.
      */
     bool resetEmergency();
 
     /**
      * @brief Verifica se o sistema está inicializado.
-     * 
+     *
      * @return true se inicializado corretamente.
      */
     bool isInitialized() const;
@@ -169,7 +169,7 @@ private:
 
     /**
      * @brief Ativa a irrigação interna.
-     * 
+     *
      * @param duration Duração em milissegundos.
      * @param manual true se ativação manual.
      * @return true se ativação foi bem-sucedida.
@@ -178,14 +178,14 @@ private:
 
     /**
      * @brief Verifica condições de segurança.
-     * 
+     *
      * @return true se é seguro operar.
      */
     bool checkSafetyConditions();
 
     /**
      * @brief Verifica timeouts e limites de tempo.
-     * 
+     *
      * @return true se houve mudança de estado.
      */
     bool checkTimeouts();

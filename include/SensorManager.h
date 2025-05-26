@@ -12,6 +12,7 @@
 #include "Hardware.h"
 #include "MemoryManager.h"
 #include "TelemetryBuffer.h"
+#include "IrrigationController.h"
 
 /**
  * Gerenciador de sensores
@@ -129,7 +130,7 @@ public:
      * @return true se o sensor mudou além do threshold.
      */
     bool sensorChanged(uint8_t sensorType, float threshold = 0.5f) const;
-    
+
     /**
      * Prepara dados de telemetria.
      *
@@ -139,6 +140,45 @@ public:
      * @return Buffer de telemetria preenchido com dados atuais
      */
     TelemetryBuffer prepareTelemetry();
+
+    /**
+     * Ativa irrigação manualmente.
+     *
+     * @param duration Duração em milissegundos (0 = até desativar manualmente).
+     * @return true se a ativação foi bem-sucedida.
+     */
+    bool activateIrrigation(uint32_t duration = 0);
+
+    /**
+     * Desativa irrigação.
+     *
+     * @param manual true se foi desativação manual.
+     * @return true se a desativação foi bem-sucedida.
+     */
+    bool deactivateIrrigation(bool manual = true);
+
+    /**
+     * Verifica se a irrigação está ativa.
+     *
+     * @return true se a bomba está ligada.
+     */
+    bool isIrrigationActive() const;
+
+    /**
+     * Obtém dados do sistema de irrigação.
+     *
+     * @return Referência constante aos dados de irrigação.
+     */
+    const IrrigationData& getIrrigationData() const;
+
+    /**
+     * Processa comando de irrigação via WebSocket.
+     *
+     * @param activate true para ativar, false para desativar.
+     * @param duration Duração em milissegundos (apenas para ativação).
+     * @return true se o comando foi processado com sucesso.
+     */
+    bool processIrrigationCommand(bool activate, uint32_t duration = 0);
 };
 
 #endif // SENSOR_MANAGER_H

@@ -35,7 +35,19 @@ IrrigationController& IrrigationController::getInstance() {
 }
 
 bool IrrigationController::init() {
-    LOG_INFO(MODULE_NAME, "Inicializando controlador de irrigação");
+    // Contador estático para diagnóstico
+    static uint8_t initCallCount = 0;
+    initCallCount++;
+
+    // Proteção contra dupla inicialização
+    if (m_initialized) {
+        LOG_WARN(MODULE_NAME, "Controlador já inicializado - operação ignorada (chamada #%u)",
+                 initCallCount);
+        return true;  // Retorna sucesso (operação idempotente)
+    }
+
+    LOG_INFO(MODULE_NAME, "Inicializando controlador de irrigação (chamada #%u)",
+             initCallCount);
 
     // Verifica se o hardware está disponível
     if (!Hardware::isIrrigationSafe()) {

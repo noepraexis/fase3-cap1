@@ -44,9 +44,15 @@ SensorManager::SensorManager()
 bool SensorManager::init() {
     LOG_INFO(MODULE_NAME, "Inicializando Gerenciador de Sensores");
 
-    // Inicializa o controlador de irrigação
+    // Inicializa o controlador de irrigação (Lazy Initialization)
     if (!IrrigationController::getInstance().init()) {
         LOG_ERROR(MODULE_NAME, "Falha ao inicializar controlador de irrigação");
+        return false;
+    }
+    
+    // Verificação adicional de segurança
+    if (!IrrigationController::getInstance().isInitialized()) {
+        LOG_ERROR(MODULE_NAME, "Controlador de irrigação não está pronto");
         return false;
     }
 

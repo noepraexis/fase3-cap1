@@ -16,7 +16,6 @@
 #include "WifiPerformance.h"
 #include "LogSystem.h"
 #include "OutputManager.h"
-#include "IrrigationController.h"
 
 // Define o nome do módulo para logging
 #define MODULE_NAME "Main"
@@ -271,15 +270,7 @@ void setup() {
         LOG_ERROR(MODULE_NAME, "Falha ao inicializar módulo de performance WiFi");
     }
 
-    // 3. Inicializa controlador de irrigação
-    LOG_INFO(MODULE_NAME, "Inicializando sistema de irrigação");
-    if (IrrigationController::getInstance().init()) {
-        LOG_INFO(MODULE_NAME, "Sistema de irrigação inicializado com sucesso");
-    } else {
-        LOG_ERROR(MODULE_NAME, "Falha ao inicializar sistema de irrigação");
-    }
-
-    // 4. Inicializa sensor manager
+    // 3. Inicializa sensor manager (que inicializará IrrigationController internamente)
     g_sensorManager = new SensorManager();
     if (g_sensorManager) {
         g_sensorManager->init();
@@ -290,7 +281,7 @@ void setup() {
         }
     }
 
-    // 5. Registra handler de eventos WiFi apenas se necessário
+    // 4. Registra handler de eventos WiFi apenas se necessário
     // Se o WiFi já estiver inicializado pelo módulo de performance,
     // não registra novamente para evitar conflitos
     if (!g_wifiEarlyInitDone) {
@@ -357,7 +348,7 @@ void setup() {
         #endif
     }
 
-    // 6. Aguarda conexão WiFi com timeout antes de iniciar WebServer
+    // 5. Aguarda conexão WiFi com timeout antes de iniciar WebServer
     // Delay suficiente para garantir sincronização das mensagens do handler
     delay(300);
 
@@ -369,7 +360,7 @@ void setup() {
         LOG_WARN(MODULE_NAME, "Timeout na conexão WiFi. Continuando inicialização...");
     }
 
-    // 7. Agora que WiFi está pronto, inicializa WebServer
+    // 6. Agora que WiFi está pronto, inicializa WebServer
     delay(200); // Pequeno delay para estabilização
 
     g_webServer = new AsyncSoilWebServer(WEB_SERVER_PORT, *g_sensorManager);
@@ -385,10 +376,10 @@ void setup() {
         }
     }
 
-    // 8. Pequeno delay para estabilização antes de criar tarefas
+    // 7. Pequeno delay para estabilização antes de criar tarefas
     delay(300);
 
-    // 9. Finalmente, cria tarefas FreeRTOS com tamanhos de stack adequados
+    // 8. Finalmente, cria tarefas FreeRTOS com tamanhos de stack adequados
     #if defined(WOKWI_ENV) || defined(WOKWI)
         // Stacks maiores para o simulador Wokwi
         xTaskCreatePinnedToCore(

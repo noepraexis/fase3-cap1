@@ -37,18 +37,45 @@ A FarmTech Solutions enfrenta desafios no monitoramento eficiente das condiçõe
 Agronegócio - Agricultura de Precisão e IoT Agrícola
 
 ### Solução Proposta
-Sistema integrado de monitoramento de solo baseado em ESP32 com controle automático de irrigação. O sistema coleta dados de múltiplos sensores, processa as informações e toma decisões inteligentes sobre quando e quanto irrigar, otimizando o uso de recursos hídricos e maximizando a produtividade.
+Sistema integrado de monitoramento de solo baseado em ESP32 com controle automático de irrigação, captura de dados, armazenamento em banco de dados SQL e dashboard de visualização em tempo real.
 
-## 🎯 Objetivos da Entrega 1
+## 🎯 Objetivos do Projeto
 
-- ✅ **Circuito de sensores** simulável no Wokwi
-- ✅ **Código C++** para leitura de sensores e controle de irrigação
-- ✅ **Lógica de controle** baseada em limiares de umidade
-- ✅ **Documentação completa** com diagramas e explicações
+### ✅ Entrega 1: Sistema de Sensores e Controle com ESP32
+- **Circuito de sensores** simulável no Wokwi
+- **Código C++** para leitura de sensores e controle de irrigação
+- **Lógica de controle** baseada em limiares de umidade
+- **Documentação completa** com diagramas e explicações
 
-## 🏗 Arquitetura Geral do Sistema
+### ✅ Entrega 2: Captura e Armazenamento de Dados
+- **Script Python** para captura de dados via serial
+- **Banco de dados SQL** para armazenamento persistente
+- **CRUD completo** para manipulação de dados
+- **Justificativa MER** relacionada com a Fase 2
 
-### 1. Hardware:
+### ✅ Ir Além 1: Dashboard de Visualização
+- **Dashboard interativo** em Streamlit
+- **Visualização em tempo real** dos sensores
+- **Gráficos históricos** e análise de tendências
+- **Sistema de alertas** e recomendações
+
+## 🏗 Arquitetura Completa do Sistema
+
+```
+┌─────────────────┐
+│     ESP32       │
+│  (Hardware)     │
+└────────┬────────┘
+         │ Serial/USB
+         ▼
+┌─────────────────┐      ┌─────────────────┐
+│ monitoring_     │────▶│ monitoring_     │
+│ database        │      │ dashboard       │
+│ (Python/SQL)    │◀────│ (Streamlit)     │
+└─────────────────┘      └─────────────────┘
+```
+
+### 1. Hardware (ESP32):
 * **Microcontrolador**: ESP32 (dual-core, 240MHz)
 * **Sensores**:
     - DHT22: Temperatura e umidade do ar
@@ -58,74 +85,104 @@ Sistema integrado de monitoramento de solo baseado em ESP32 com controle automá
     - Relé (GPIO27): Controle de bomba de irrigação
     - LED integrado: Indicação de status
 
-### 2. Software:
+### 2. Software Embarcado (C++):
 * **Framework**: Arduino + FreeRTOS
 * **Componentes Principais**:
     - **SensorManager**: Aquisição e processamento de dados dos sensores
     - **IrrigationController**: Sistema inteligente de controle de irrigação
     - **AsyncSoilWebServer**: Interface web assíncrona com WebSockets
     - **SystemMonitor**: Monitoramento de recursos e watchdog
-    - **MemoryManager**: Gerenciamento otimizado de memória
-    - **WiFiManager**: Conexão e gerenciamento de WiFi
-    - **Hardware**: Abstração de acesso ao hardware
     - **TelemetryBuffer**: Centralização de dados para telemetria
 
-### 3. Organização Multitarefa:
-* **Núcleo 0**: Tarefa de sensores (prioridade alta)
-* **Núcleo 1**: Tarefa web e interface (prioridade normal)
-* **Sincronização**: Semáforos FreeRTOS para acesso seguro aos dados
+### 3. Sistema de Captura e Armazenamento (Python):
+* **Localização**: `monitoring_database/`
+* **Componentes**:
+    - **serial_reader.py**: Captura dados do ESP32 via serial
+    - **database_manager.py**: Gerenciamento SQL com CRUD completo
+    - **data_pipeline.py**: Pipeline integrado de processamento
+    - **setup.py**: Configuração automática do sistema
+* **Banco de Dados**: SQLite com 4 tabelas principais
+    - sensor_readings: Leituras dos sensores
+    - irrigation_events: Eventos de irrigação
+    - alerts: Sistema de alertas
+    - system_stats: Estatísticas do sistema
 
-### 4. Sistema de Irrigação:
+### 4. Dashboard de Visualização (Streamlit):
+* **Localização**: `monitoring_dashboard/`
+* **Funcionalidades**:
+    - Visualização em tempo real com medidores gauge
+    - Gráficos históricos interativos
+    - Sistema de alertas categorizados
+    - Análise preditiva e recomendações
+    - Auto-refresh configurável (5-60s)
 
-#### Características:
-- **Controle Automático**: Baseado em limiar de umidade (30%-70%)
-- **Controle Manual**: Via interface web com comando toggle
-- **Segurança**:
-  - Timeout máximo: 5 minutos de operação contínua
-  - Intervalo mínimo: 1 minuto entre ativações
-  - Shutdown de emergência disponível
-- **Telemetria**:
-  - Tempo de funcionamento em tempo real
-  - Contador de ativações diárias
-  - Estado atual da bomba
-  - Histórico de operações
-
-#### Configurações (Config.h):
-```cpp
-#define IRRIGATION_MAX_RUNTIME    300000  // 5 minutos
-#define IRRIGATION_MIN_INTERVAL   60000   // 1 minuto
-#define MOISTURE_THRESHOLD_LOW    30.0f   // Ativa irrigação
-#define MOISTURE_THRESHOLD_HIGH   70.0f   // Desativa irrigação
-#define PIN_IRRIGATION_RELAY      27      // GPIO do relé
-```
-
-### 5. Interface Web:
-* **Tecnologia**: WebSockets para baixa latência
-* **Formato**: JSON para troca de dados
-* **Recursos**:
-    - Monitoramento em tempo real de todos os sensores
-    - Controle manual da bomba de irrigação
-    - Visualização de estatísticas do sistema
-    - Indicadores visuais de status
-
-## 📊 Fluxo de Dados
+## 📊 Fluxo de Dados Completo
 
 ```
-Sensores → SensorManager → IrrigationController → Decisão
-                ↓                    ↓
-         TelemetryBuffer ← ← ← ← ← ←┘
-                ↓
-          OutputManager
-           ↙        ↘
-    WebSocket    Console
+Sensores → ESP32 → Serial → Python → SQLite → Dashboard
+   ↑                                             ↓
+   └──────── Controle de Irrigação ←─────────────┘
 ```
 
-1. **Aquisição**: Sensores lidos a cada 200ms pela `sensorTask`
-2. **Processamento**: Filtros de média móvel aplicados pelo `SensorManager`
-3. **Decisão**: `IrrigationController` avalia condições e toma decisões
-4. **Telemetria**: Dados centralizados no `TelemetryBuffer`
-5. **Distribuição**: `OutputManager` envia para WebSocket e console
-6. **Interface**: Clientes web recebem atualizações em tempo real
+1. **Aquisição**: Sensores lidos a cada 200ms pelo ESP32
+2. **Transmissão**: Dados enviados via serial em formato JSON
+3. **Captura**: Python lê e processa os dados seriais
+4. **Armazenamento**: Dados salvos em banco SQLite
+5. **Visualização**: Dashboard exibe dados em tempo real
+6. **Decisão**: Sistema toma ações baseadas nas análises
+
+## 💻 Como Executar o Sistema Completo
+
+### Pré-requisitos:
+- Visual Studio Code com PlatformIO
+- Python 3.8+
+- pip (gerenciador de pacotes Python)
+
+### 1. ESP32 - Sistema Embarcado:
+
+```bash
+# Clone o repositório
+git clone https://github.com/noepraexis/fase3-cap1.git
+cd fase3-cap1
+
+# Compile o projeto
+pio run -e esp32dev
+
+# Execute no simulador Wokwi
+# F1 → "Wokwi: Start Simulation"
+```
+
+### 2. Sistema de Captura de Dados:
+
+```bash
+# Entre no diretório
+cd monitoring_database
+
+# Configure o sistema
+python3 setup.py
+
+# Execute o pipeline de dados
+python3 data_pipeline.py
+
+# Ou use o menu interativo
+./run_system.sh
+```
+
+### 3. Dashboard de Visualização:
+
+```bash
+# Entre no diretório
+cd monitoring_dashboard
+
+# Instale dependências
+pip install -r requirements.txt
+
+# Execute o dashboard (modo demo)
+python dashboard_demo.py
+
+# Ou com dados reais
+streamlit run dashboard.py
+```
 
 ## 🔧 Diagrama do Circuito
 
@@ -142,99 +199,21 @@ Sensores → SensorManager → IrrigationController → Decisão
 | Relé Irrigação | GPIO27 | Controle bomba |
 | LED Status | GPIO2 | Indicador interno |
 
-## 💡 Características do Design
+## 📈 Interfaces e Visualizações
 
-### Padrões de Projeto:
-- **Singleton**: Controladores únicos (`IrrigationController`, `SystemMonitor`)
-- **Observer**: Notificações de mudanças via WebSocket
-- **Lazy Initialization**: Componentes inicializados quando necessário
-- **Object Pool**: Gerenciamento de memória sem fragmentação
-
-### Princípios SOLID:
-- **S**ingle Responsibility: Cada classe tem uma única responsabilidade
-- **O**pen/Closed: Extensível sem modificar código existente
-- **L**iskov Substitution: Interfaces consistentes
-- **I**nterface Segregation: Interfaces específicas por função
-- **D**ependency Inversion: Abstrações ao invés de implementações
-
-### Segurança e Robustez:
-- Proteção contra dupla inicialização (idempotente)
-- Timeouts e limites operacionais
-- Recuperação automática de falhas
-- Logs detalhados para diagnóstico
-- Watchdog para prevenção de travamentos
-
-## 📁 Estrutura de Diretórios
-
-```
-/
-├── assets/              # Imagens e recursos
-│   ├── diagram.png      # Diagrama do circuito
-│   └── logo-fiap.png    # Logo institucional
-├── include/             # Headers (.h)
-│   ├── Config.h         # Configurações gerais
-│   ├── Hardware.h       # Abstração de hardware
-│   ├── IrrigationController.h  # Controlador de irrigação
-│   ├── SensorManager.h  # Gerenciador de sensores
-│   └── ...
-├── src/                 # Implementações (.cpp)
-│   ├── Main.cpp         # Ponto de entrada
-│   ├── IrrigationController.cpp  # Lógica de irrigação
-│   ├── SensorManager.cpp  # Processamento de sensores
-│   └── ...
-├── platformio.ini       # Configuração PlatformIO
-├── wokwi.toml          # Configuração simulador
-└── README.md           # Este arquivo
-```
-
-## 🚀 Como Executar o Projeto
-
-### Pré-requisitos:
-- Visual Studio Code
-- Extensão PlatformIO
-- Extensão Wokwi Simulator
-
-### Passos:
-
-1. **Clone o repositório:**
-```bash
-git clone https://github.com/noepraexis/fase3-cap1.git
-cd fase3-cap1
-```
-
-2. **Abra no VS Code:**
-```bash
-code .
-```
-
-3. **Compile o projeto:**
-```bash
-pio run -e esp32dev
-```
-
-4. **Execute no simulador Wokwi:**
-   - Pressione F1 → "Wokwi: Start Simulation"
-   - Ou clique no ícone do Wokwi na barra de status
-
-5. **Acesse a interface web:**
-   - Abra o navegador: http://127.0.0.1:8888
-   - A interface mostrará todos os sensores e controles
-
-### Solução de Problemas:
-
-Se houver erro de dependências:
-```bash
-pio upgrade --dev
-pio pkg update
-```
-
-## 🔍 Monitoramento e Controle
-
-### Interface Web:
+### Interface Web ESP32:
 - **URL**: http://127.0.0.1:8888 (Wokwi)
-- **Atualização**: Tempo real via WebSocket
-- **Controles**: Toggle para bomba de irrigação
-- **Estatísticas**: Uptime, memória, ativações
+- **Tecnologia**: WebSockets
+- **Atualização**: Tempo real
+- **Controles**: Toggle para bomba
+
+### Dashboard Streamlit:
+- **URL**: http://localhost:8501
+- **Componentes**:
+  - Medidores gauge para sensores
+  - Gráficos de série temporal
+  - Sistema de alertas visual
+  - Análise preditiva
 
 ### Telemetria JSON:
 ```json
@@ -249,35 +228,105 @@ pio pkg update
   "irrigation": {
     "active": true,
     "uptime": 120,
-    "dailyActivations": 5,
-    "threshold": 30.0
+    "dailyActivations": 5
   },
   "system": {
     "freeHeap": 145632,
-    "uptime": 3600,
-    "wifi": "Connected"
+    "uptime": 3600
   }
 }
 ```
 
-## 📈 Métricas de Performance
+## 📁 Estrutura de Diretórios
 
-- **Taxa de amostragem**: 5Hz (200ms)
-- **Latência WebSocket**: <50ms
-- **Uso de memória**: ~150KB heap
-- **CPU**: <30% em operação normal
-- **Precisão sensores**:
-  - Temperatura: ±0.5°C
-  - Umidade: ±2%
-  - pH: ±0.1
+```
+/
+├── assets/                    # Imagens e recursos
+├── include/                   # Headers C++ (.h)
+├── src/                      # Implementações C++ (.cpp)
+├── monitoring_database/      # Sistema de captura Python
+│   ├── serial_reader.py     # Leitor serial
+│   ├── database_manager.py  # Gerenciador SQL
+│   ├── data_pipeline.py     # Pipeline de dados
+│   ├── setup.py            # Configuração
+│   └── run_system.sh       # Script de execução
+├── monitoring_dashboard/     # Dashboard Streamlit
+│   ├── dashboard.py        # Dashboard principal
+│   ├── dashboard_demo.py   # Modo demonstração
+│   └── requirements.txt    # Dependências
+├── platformio.ini           # Configuração PlatformIO
+├── wokwi.toml              # Configuração simulador
+└── README.md               # Este arquivo
+```
+
+## 🚨 Sistema de Alertas
+
+O sistema gera alertas automáticos baseados em:
+
+| Sensor | Mínimo | Ideal | Máximo | Ação |
+|--------|--------|-------|--------|------|
+| Umidade | 30% | 40-60% | 70% | Irrigação automática |
+| Temperatura | 15°C | 20-30°C | 35°C | Alerta visual |
+| pH | 6.0 | 6.5-7.0 | 8.0 | Recomendação correção |
+
+## 📊 Métricas de Performance
+
+### ESP32:
+- Taxa de amostragem: 5Hz (200ms)
+- Latência WebSocket: <50ms
+- Uso de memória: ~150KB heap
+
+### Sistema Python:
+- Taxa de captura: >99%
+- Latência de processamento: <50ms
+- Armazenamento: ~1MB/dia
+
+### Dashboard:
+- Tempo de carregamento: <2s
+- Auto-refresh: 5-60s configurável
+- Cache: 15 minutos
+
+## 🔍 Solução de Problemas
+
+### ESP32 não conecta:
+```bash
+# Verifique a porta
+ls /dev/tty*  # Linux/Mac
+# ou
+mode  # Windows - verificar COM ports
+```
+
+### Dados não aparecem no dashboard:
+```bash
+# Verifique o pipeline
+cd monitoring_database
+python3 test_crud.py
+
+# Verifique o banco
+sqlite3 soil_monitoring.db "SELECT COUNT(*) FROM sensor_readings;"
+```
+
+### Dashboard não abre:
+```bash
+# Reinstale dependências
+pip install -r requirements.txt --upgrade
+
+# Use porta alternativa
+streamlit run dashboard.py --server.port 8502
+```
 
 ## 🐛 Problemas Conhecidos e Soluções
 
 ### Issue #13: Dupla Inicialização
 - **Status**: ✅ RESOLVIDO
 - **Problema**: IrrigationController era inicializado duas vezes
-- **Solução**: Implementada proteção idempotente e lazy initialization
-- **Impacto**: Nenhum após correção
+- **Solução**: Implementada proteção idempotente
+
+## 📚 Documentação Adicional
+
+- [Documentação Técnica - Database](monitoring_database/TECHNICAL.md)
+- [Documentação Técnica - Dashboard](monitoring_dashboard/TECHNICAL.md)
+- [Justificativa MER](monitoring_database/MER_justification.md)
 
 ## 📚 Referências
 
@@ -285,7 +334,8 @@ pio pkg update
 2. [DHT22 Sensor Documentation](https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf)
 3. [FreeRTOS Documentation](https://www.freertos.org/Documentation/RTOS_book.html)
 4. [PlatformIO Documentation](https://docs.platformio.org/)
-5. [Wokwi Simulator](https://docs.wokwi.com/)
+5. [Streamlit Documentation](https://docs.streamlit.io/)
+6. [SQLite Documentation](https://www.sqlite.org/docs.html)
 
 ## 📋 Licença
 

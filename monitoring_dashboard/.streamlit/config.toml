@@ -1,0 +1,31 @@
+# Configuração do Streamlit para Dashboard de Monitoramento
+
+[theme]
+primaryColor = "#2E7D32"           # Verde escuro
+backgroundColor = "#FFFFFF"        # Branco
+secondaryBackgroundColor = "#F0F2F6" # Cinza claro
+textColor = "#262730"             # Cinza escuro
+font = "sans serif"
+
+[server]
+port = 8501
+address = "localhost"
+headless = true
+runOnSave = true
+maxUploadSize = 10
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8501
+
+[runner]
+magicEnabled = true
+installTracer = false
+fixMatplotlib = true
+
+[client]
+showErrorDetails = true
+toolbarMode = "minimal"

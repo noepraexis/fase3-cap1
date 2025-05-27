@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class SoilMonitorDatabase:
     """Gerenciador de banco de dados para o sistema de monitoramento de solo"""
 
-    def __init__(self, db_path: str = "soil_monitor.db"):
+    def __init__(self, db_path: str = "soil_monitoring.db"):
         """
         Inicializa o gerenciador de banco de dados
 

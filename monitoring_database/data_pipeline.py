@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class DataPipeline:
     """Pipeline para captura e armazenamento de dados do ESP32"""
 
-    def __init__(self, serial_port: str = None, db_path: str = "soil_monitor.db"):
+    def __init__(self, serial_port: str = None, db_path: str = "soil_monitoring.db"):
         """
         Inicializa o pipeline de dados
 
@@ -282,7 +282,7 @@ def main():
 
     # Configurações
     SERIAL_PORT = None  # None para usar simulador, ou '/dev/ttyUSB0' para hardware real
-    DB_PATH = "soil_monitor.db"
+    DB_PATH = "soil_monitoring.db"
 
     # Configura handler de sinal
     signal.signal(signal.SIGINT, signal_handler)

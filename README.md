@@ -59,20 +59,26 @@ Sistema integrado de monitoramento de solo baseado em ESP32 com controle automá
 - **Gráficos históricos** e análise de tendências
 - **Sistema de alertas** e recomendações
 
+### ✅ Ir Além 2: Integração com API Meteorológica
+- **Integração com API OpenWeather** para dados climáticos reais
+- **Sistema de decisão inteligente** baseado em clima + sensores
+- **Lógica de irrigação otimizada** que considera previsão do tempo
+- **Economia de água** evitando irrigação antes da chuva
+
 ## 🏗 Arquitetura Completa do Sistema
 
 ```
-┌─────────────────┐
-│     ESP32       │
-│  (Hardware)     │
-└────────┬────────┘
-         │ Serial/USB
-         ▼
-┌─────────────────┐      ┌─────────────────┐
-│ monitoring_     │────▶│ monitoring_     │
-│ database        │      │ dashboard       │
-│ (Python/SQL)    │◀────│ (Streamlit)     │
-└─────────────────┘      └─────────────────┘
+┌─────────────────┐     ┌─────────────────┐
+│     ESP32       │     │   OpenWeather   │
+│  (Hardware)     │     │      API        │
+└────────┬────────┘     └─────────┬───────┘
+         │ Serial/USB             │ HTTPS
+         ▼                        ▼
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+│ monitoring_     │────▶│ monitoring_     │      │ irrigation_     │
+│ database        │      │ dashboard       │      │ weather         │
+│ (Python/SQL)    │◀────│ (Streamlit)     │      │ (Smart Logic)   │
+└─────────────────┘      └─────────────────┘      └─────────────────┘
 ```
 
 ### 1. Hardware (ESP32):
@@ -116,20 +122,35 @@ Sistema integrado de monitoramento de solo baseado em ESP32 com controle automá
     - Análise preditiva e recomendações
     - Auto-refresh configurável (5-60s)
 
+### 5. Sistema de Irrigação Inteligente (Python):
+* **Localização**: `irrigation_weather/`
+* **Funcionalidades**:
+    - Integração com API OpenWeather para dados meteorológicos
+    - Motor de decisão inteligente baseado em clima + sensores
+    - 4 tipos de decisão: IRRIGAR, PULAR, REDUZIR, ADIAR
+    - Simulador de condições climáticas para testes
+    - Histórico de decisões e análises estatísticas
+
 ## 📊 Fluxo de Dados Completo
 
 ```
+                    ┌─ OpenWeather API
+                    │
 Sensores → ESP32 → Serial → Python → SQLite → Dashboard
-   ↑                                             ↓
-   └──────── Controle de Irrigação ←─────────────┘
+   ↑                  ↓                  ↑
+   │              Weather Logic      Smart Decision
+   │                  ↓                  ↓
+   └──────── Controle de Irrigação ←─────┘
 ```
 
 1. **Aquisição**: Sensores lidos a cada 200ms pelo ESP32
 2. **Transmissão**: Dados enviados via serial em formato JSON
 3. **Captura**: Python lê e processa os dados seriais
-4. **Armazenamento**: Dados salvos em banco SQLite
-5. **Visualização**: Dashboard exibe dados em tempo real
-6. **Decisão**: Sistema toma ações baseadas nas análises
+4. **Meteorologia**: Sistema busca dados climáticos da API
+5. **Decisão Inteligente**: Combina dados de solo + clima
+6. **Armazenamento**: Dados e decisões salvos em SQLite
+7. **Visualização**: Dashboard exibe dados em tempo real
+8. **Execução**: Sistema executa irrigação otimizada
 
 ## 💻 Como Executar o Sistema Completo
 
@@ -182,6 +203,31 @@ python dashboard_demo.py
 
 # Ou com dados reais
 streamlit run dashboard.py
+```
+
+### 4. Sistema de Irrigação Inteligente:
+
+```bash
+# Entre no diretório
+cd irrigation_weather
+
+# Instale dependências
+pip install -r requirements.txt
+
+# Configure API key (opcional - pode usar simulador)
+export OPENWEATHER_API_KEY="sua_chave_aqui"
+
+# Execute com simulador (sem API key)
+python weather_irrigation_system.py --simulator
+
+# Ou com dados reais da API
+python weather_irrigation_system.py --api-key SUA_CHAVE
+
+# Modo contínuo (verifica a cada 30 min)
+python weather_irrigation_system.py --simulator --continuous
+
+# Gerar relatório de estatísticas
+python weather_irrigation_system.py --simulator --report
 ```
 
 ## 🔧 Diagrama do Circuito
@@ -254,6 +300,13 @@ streamlit run dashboard.py
 │   ├── dashboard.py        # Dashboard principal
 │   ├── dashboard_demo.py   # Modo demonstração
 │   └── requirements.txt    # Dependências
+├── irrigation_weather/       # Sistema inteligente meteorológico
+│   ├── weather_api.py      # Cliente API OpenWeather
+│   ├── irrigation_decision.py # Motor de decisão
+│   ├── database_integration.py # Integração BD
+│   ├── weather_irrigation_system.py # Sistema principal
+│   ├── requirements.txt    # Dependências
+│   └── README.md          # Documentação específica
 ├── platformio.ini           # Configuração PlatformIO
 ├── wokwi.toml              # Configuração simulador
 └── README.md               # Este arquivo
@@ -315,18 +368,39 @@ pip install -r requirements.txt --upgrade
 streamlit run dashboard.py --server.port 8502
 ```
 
-## 🐛 Problemas Conhecidos e Soluções
-
-### Issue #13: Dupla Inicialização
-- **Status**: ✅ RESOLVIDO
-- **Problema**: IrrigationController era inicializado duas vezes
-- **Solução**: Implementada proteção idempotente
-
 ## 📚 Documentação Adicional
 
 - [Documentação Técnica - Database](monitoring_database/TECHNICAL.md)
 - [Documentação Técnica - Dashboard](monitoring_dashboard/TECHNICAL.md)
+- [Documentação - Sistema Meteorológico](irrigation_weather/README.md)
 - [Justificativa MER](monitoring_database/MER_justification.md)
+
+## 🌟 Principais Funcionalidades do Sistema Meteorológico
+
+### Lógica de Decisão Inteligente:
+1. **Condições Críticas** (prioridade máxima):
+   - Solo criticamente seco (<20%): irrigação urgente
+   - Tempestade em andamento: nunca irrigar (segurança)
+   - Chuva forte atual (>5mm/h): cancelar irrigação
+
+2. **Análise de Previsão**:
+   - Chuva em <3h: cancelar irrigação
+   - Chuva em 3-6h: adiar irrigação
+   - Chuva moderada esperada: reduzir volume
+
+3. **Economia de Água**:
+   - Evita irrigação desnecessária antes da chuva
+   - Reduz volume quando há alta umidade do ar
+   - Otimiza horários baseado na temperatura
+
+### Cenários de Teste:
+```bash
+# Simular diferentes condições
+python weather_irrigation_system.py --simulator --scenario drought   # Seca
+python weather_irrigation_system.py --simulator --scenario rain     # Chuva
+python weather_irrigation_system.py --simulator --scenario storm    # Tempestade
+python weather_irrigation_system.py --simulator --scenario normal   # Normal
+```
 
 ## 📚 Referências
 

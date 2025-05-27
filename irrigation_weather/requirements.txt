@@ -1,0 +1,15 @@
+# Dependências do Sistema de Irrigação Inteligente com API Meteorológica
+
+# API HTTP
+requests>=2.32.0
+
+# Utilitários
+python-dateutil>=2.8.2
+
+# Tipos de dados
+typing-extensions>=4.8.0
+
+# Para compatibilidade com o sistema principal
+pyserial>=3.5
+pandas>=2.0.3
+numpy>=1.24.3

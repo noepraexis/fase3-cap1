@@ -1,0 +1,22 @@
+# Requirements para Sistema de Armazenamento de Dados
+# Python 3.8+
+
+# Comunicação Serial
+pyserial==3.5
+
+# Análise de dados (opcional, para extensões futuras)
+pandas==2.1.4
+numpy==1.24.3
+matplotlib==3.7.2
+
+# Geração de relatórios
+reportlab==4.0.7
+
+# Testes
+pytest==7.4.3
+pytest-cov==4.1.0
+
+# Linting e formatação
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
